@@ -79,12 +79,56 @@ class Template {
 		}
 
 		const script_text = tpl_script.text;
+
+		this.raw_data = document.createElement('div');
+		const el = document.createElement('template');
+		el.innerHTML = script_text;
+		this.raw_data.append(...el.content.childNodes);
+
 		const f_text = Template.build(script_text);
 		console.log(f_text);
 		this.func = new Function('tpl', 'local', f_text);
 	}
 
 	run(args = {}) {
-		return this.func(this, args);
+		this.args = args;
+		const html_str = this.func(this, args);
+
+		const el = document.createElement('template');
+		el.innerHTML = html_str;
+		this.data = [...el.content.childNodes];
+		return this.data;
+	}
+
+	reload(selector, args = this.args) {
+		const raw = this.raw_data.querySelector(selector);
+
+		const real = (() => {
+			for (const el of this.data) {
+				if (!el.querySelector) continue;
+				const data = (el.parentElement || el).querySelector(selector);
+				if (data) return data;
+			}
+
+			return null;
+		})();
+
+		if (!raw || !real) {
+			return false;
+		}
+
+		/* fix outerHTML mangling some (technically invalid) syntax */
+		const raw_str = raw.outerHTML
+				.replace(/&amp;/g, '&')
+				.replace(/\{if="" /g, '{if ')
+				.replace(/&lt;/g, '<')
+				.replace(/&gt;/g, '>')
+		;
+		const new_fn_text = Template.build(raw_str);
+		const new_fn = new Function('tpl', 'local', new_fn_text);
+
+		const new_real = document.createElement('template');
+		new_real.innerHTML = new_fn(this, args);
+		real.replaceWith(...new_real.content.childNodes);
 	}
 }

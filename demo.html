@@ -8,19 +8,23 @@
 <body>
 	<h1>Test 1</h1>
 	<script id="tpl-test" type="text/x-jstemplate">
-		{for i = 0; i < 3; i++}
-			{assign obj = { name: 'test ' + $i \}}
-			{hascontent}
-				<div onclick="console.log('pressed ' + {serialize $obj.name})">
-					<span>{@$i} + 1 = </span>
-					{content}
-						{if $i != 1}
-							<span class="{if $i == 2}{@@test@@}{/if}">{@$i + 1}</span>
-						{/if}
-					{/content}
-				</div>
-			{/hascontent}
-		{/for}
+		<div id="main">
+			<div>Val inside #main: "{@$some_var}"</div>
+			{for i = 0; i < 3; i++}
+				{assign obj = { name: 'test ' + $i \}}
+				{hascontent}
+					<div onclick="console.log('pressed ' + {serialize $obj.name})">
+						<span>{@$i} + 1 = </span>
+						{content}
+							{if $i != 1 && true == true}
+								<span class="{if $i == 2}{@@test@@}{/if}">{@$i + 1}</span>
+							{/if}
+						{/content}
+					</div>
+				{/hascontent}
+			{/for}
+		</div>
+		<div id="to-reload">Val inside #to-reload: "{@$some_var}"</div>
 
 		{@@
 		<style>
@@ -37,10 +41,10 @@
 			try {
 				const tpl = g_tpl = new Template('tpl-test');
 				const f = tpl.compile();
-				const built = tpl.run({});
-				const el = document.createElement('template');
-				el.innerHTML = built.trim();
-				document.body.append(...el.content.childNodes);
+				const el = tpl.run({ some_var: 'initial' });
+				document.body.append(...el);
+				tpl.reload('#to-reload', { some_var: 'reloaded' });
+				tpl.reload('#main');
 			} finally {
 				const is_changed = async (filename) => {
 					const req = await fetch(filename)
