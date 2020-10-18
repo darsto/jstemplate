@@ -1,0 +1,72 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<title>Test</title>
+	<script src="template.js"></script>
+</head>
+<body>
+	<h1>Test 1</h1>
+	<script id="tpl-test" type="text/x-jstemplate">
+		{for i = 0; i < 3; i++}
+			{assign obj = { name: 'test ' + $i \}}
+			{hascontent}
+				<div onclick="console.log('pressed ' + {serialize $obj.name})">
+					<span>{@$i} + 1 = </span>
+					{content}
+						{if $i != 1}
+							<span class="{if $i == 2}{@@test@@}{/if}">{@$i + 1}</span>
+						{/if}
+					{/content}
+				</div>
+			{/hascontent}
+		{/for}
+
+		{@@
+		<style>
+			.test {
+				font-weight: bold;
+			}
+		</style>
+		@@}
+	</script>
+	<script type="text/javascript">
+		let last_src = {};
+		let g_tpl = null;
+		window.onload = () => {
+			try {
+				const tpl = g_tpl = new Template('tpl-test');
+				const f = tpl.compile();
+				const built = tpl.run({});
+				const el = document.createElement('template');
+				el.innerHTML = built.trim();
+				document.body.append(...el.content.childNodes);
+			} finally {
+				const is_changed = async (filename) => {
+					const req = await fetch(filename)
+					const src = await req.text();
+					const ret = last_src[filename] && last_src[filename] != src;
+					last_src[filename] = src;
+					return ret;
+				};
+
+				const files = [ 'template.js', 'demo.html' ];
+
+				const check_reload = async () => {
+					for (const f of files) {
+						if (!await is_changed(f)) {
+							continue;
+						}
+
+						window.location.reload();
+						return;
+					}
+					setTimeout(check_reload, 1000);
+				};
+				check_reload();
+			}
+		};
+	</script>
+</body>
+</html>
+
