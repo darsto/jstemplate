@@ -46,6 +46,7 @@ class Template {
 			})
 			.replace(/{(.*?[^\\])}/g, (match, content) => { /* for each code block */
 				return '";\n' + content
+					.replace(/\\"/g, '"' /* don't escape double quotes -> they're real strings now */)
 					.replace(/\$/g, "local." /* $ variable access */)
 					.replace(/^assign (.*)$/, "local.$1;" /* setup new $ variable */)
 					.replace(/^(?:foreach|for) \s*(.*?)\s*=(.*?);(.*?);(.*?)$/, "{const _bckup_name=\"$1\"; const _bckup=local[_bckup_name]; for (let $1 =$2;$3;$4) { local[_bckup_name] = $1;" /* make the local variable available with $variable syntax, so also backup the previous value of local[var_name] */)
