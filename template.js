@@ -87,7 +87,6 @@ class Template {
 		this.raw_data.append(...el.content.childNodes);
 
 		const f_text = Template.build(script_text);
-		console.log(f_text);
 		this.func = new Function('tpl', 'local', f_text);
 	}
 
