@@ -64,7 +64,7 @@ class Template {
 					.replace(/^\/content$/g, "} _has_cntnt = _bckup != out; }")
 					.replace(/^\/hascontent$/g, "} if (!_has_cntnt) out = _bckup; }")
 					.replace(/^@(.*)/g, (match, content) => { /* text block */
-						return append_s + '(' + content	+ ');';
+						return append_s + '(' + content + ');';
 					})
 				+ append_s + '"';
 			})
@@ -102,6 +102,15 @@ class Template {
 		const el = document.createElement('template');
 		el.innerHTML = html_str;
 		this.data = [...el.content.childNodes];
+		if (this.compile_cb) {
+			for (const dom of this.data) {
+				if (!dom.querySelectorAll) {
+					/* not an Element */
+					continue;
+				}
+				this.compile_cb(dom);
+			}
+		}
 		return this.data;
 	}
 
@@ -134,6 +143,17 @@ class Template {
 
 		const new_real = document.createElement('template');
 		new_real.innerHTML = new_fn(this, args);
-		real.replaceWith(...new_real.content.childNodes);
+		const new_els = [...new_real.content.childNodes];
+		real.replaceWith(...new_els);
+
+		if (this.compile_cb) {
+			for (const dom of new_els) {
+				if (!dom.querySelectorAll) {
+					/* not an Element */
+					continue;
+				}
+				this.compile_cb(dom);
+			}
+		}
 	}
 }
