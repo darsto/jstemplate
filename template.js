@@ -91,6 +91,10 @@ class Template {
 	}
 
 	run(args = {}) {
+		if (!this.func) {
+			this.compile();
+		}
+
 		this.args = args;
 		const html_str = this.func(this, args);
 
