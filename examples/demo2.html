@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta charset="UTF-8">
+	<title>Test</title>
+	<script src="../template.js"></script>
+</head>
+<body>
+	<h1>Test 1</h1>
+	<script type="text/javascript">
+		let last_src = {};
+		let g_tpl = null;
+
+		window.onload = async () => {
+			/* Note that i.e. Chrome needs to be run with --allow-file-access-from-files
+			 * for this to work when .html is accessed locally (file://...) */
+			let tpl_f = await fetch('demo2.tpl');
+			let tpl_text = await tpl_f.text();
+
+			const script_el = document.createElement('script');
+			script_el.type = 'text/x-jstemplate';
+			script_el.innerHTML = tpl_text;
+			script_el.id = 'tpl-test';
+			document.head.append(script_el);
+
+			const my_tpl_args = { some_var: 'initial' };
+
+			const tpl = g_tpl = new Template('tpl-test');
+			const f = tpl.compile();
+			const el = tpl.run(my_tpl_args);
+			document.body.append(el);
+			my_tpl_args.some_var = 'updated value';
+			tpl.reload('#to-reload');
+		};
+	</script>
+</body>
+</html>
+

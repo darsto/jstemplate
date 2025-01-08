@@ -24,7 +24,8 @@ my_tpl.reload('.myclass');
 The above will `querySelector('.myclass')` in the template code, re-evaluate it,
 then `querySelector('.myclass')` in the old generated HTML and replace it.
 
-See `demo.html` for a full example.
+See a full example here:
+[selfcontained.html](https://github.com/darsto/jstemplate/blob/master/examples/selfcontained.html).
 
 jstemplate is a javascript equivalent of PHP template language used in
 [Woltlab Suite Core](https://docs.woltlab.com/view_templates.html),
