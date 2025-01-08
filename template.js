@@ -5,9 +5,8 @@
 'use strict';
 
 class Template {
-	static tpl_map = new WeakMap();
+	static tpl_map = new Map();
 	static tpl_map_idx = 0;
-	static tpl_id_map = {};
 
 	constructor(name) {
 		this.name = name;
@@ -17,9 +16,7 @@ class Template {
 		this.tpl_el = null;
 		this.tpl_code_blocks = null;
 
-		/* weak map keys can't be primitives, so use a dummy object */
-		const id_obj = Template.tpl_id_map[this.id] = {};
-		Template.tpl_map.set(id_obj, this);
+		Template.tpl_map.set(this.id, this);
 	}
 
 	get_var_id(obj) {
@@ -32,8 +29,7 @@ class Template {
 	}
 
 	static get_by_id(id) {
-		const id_obj = Template.tpl_id_map[id];
-		return Template.tpl_map.get(id_obj);
+		return Template.tpl_map.get(id);
 	}
 
 	static build(str) {
@@ -145,5 +141,9 @@ class Template {
 		if (this.compile_cb) {
 			this.compile_cb(new_el);
 		}
+	}
+
+	remove() {
+		Template.tpl_map.delete[this.id];
 	}
 }
