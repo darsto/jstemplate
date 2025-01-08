@@ -77,56 +77,44 @@ class Template {
 	compile() {
 		const tpl_script = document.getElementById(this.name);
 		if (!tpl_script) {
-			throw new Error('Template script  ' + this.name + ' doesn\'t exist');
+			throw new Error('Template script ' + this.name + ' doesn\'t exist');
 		}
-
 		const script_text = tpl_script.text;
 
-		this.raw_data = document.createElement('div');
 		const el = document.createElement('template');
 		el.innerHTML = script_text;
-		this.raw_data.append(...el.content.childNodes);
+
+		this.raw_data = el;
 
 		const f_text = Template.build(script_text);
 		this.func = new Function('tpl', 'local', f_text);
 	}
 
-	run(args = {}) {
+	run_raw(args = {}) {
 		if (!this.func) {
 			this.compile();
 		}
 
 		this.args = args;
-		const html_str = this.func(this, args);
+		return this.func(this, args);
+	}
 
-		const el = document.createElement('template');
+	run(args = {}) {
+		const html_str = this.run_raw(args);
+
+		const el = document.createElement('div');
+		el.jsTemplate = this;
 		el.innerHTML = html_str;
-		this.data = [...el.content.childNodes];
 		if (this.compile_cb) {
-			for (const dom of this.data) {
-				if (!dom.querySelectorAll) {
-					/* not an Element */
-					continue;
-				}
-				this.compile_cb(dom);
-			}
+			this.compile_cb(el);
 		}
+		this.data = el;
 		return this.data;
 	}
 
 	reload(selector, args = this.args) {
-		const raw = this.raw_data.querySelector(selector);
-
-		const real = (() => {
-			for (const el of this.data) {
-				if (!el.querySelector) continue;
-				const data = (el.parentElement || el).querySelector(selector);
-				if (data) return data;
-			}
-
-			return null;
-		})();
-
+		const raw = this.raw_data.content.querySelector(selector);
+		const real = this.data.querySelector(selector);
 		if (!raw || !real) {
 			return false;
 		}
@@ -143,17 +131,12 @@ class Template {
 
 		const new_real = document.createElement('template');
 		new_real.innerHTML = new_fn(this, args);
-		const new_els = [...new_real.content.childNodes];
-		real.replaceWith(...new_els);
+
+		const new_el = new_real.content.firstElementChild;
+		real.replaceWith(new_el);
 
 		if (this.compile_cb) {
-			for (const dom of new_els) {
-				if (!dom.querySelectorAll) {
-					/* not an Element */
-					continue;
-				}
-				this.compile_cb(dom);
-			}
+			this.compile_cb(new_el);
 		}
 	}
 }

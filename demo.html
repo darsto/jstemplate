@@ -40,7 +40,7 @@
 			const tpl = g_tpl = new Template('tpl-test');
 			const f = tpl.compile();
 			const el = tpl.run({ some_var: 'initial' });
-			document.body.append(...el);
+			document.body.append(el);
 			tpl.reload('#to-reload', { some_var: 'reloaded' });
 			tpl.reload('#main');
 		};
