@@ -19,59 +19,6 @@ class Template {
 		Template.tpl_map.set(this.id, this);
 	}
 
-	get_var_id(obj) {
-		let id = this.var_map.get(obj);
-		if (id == undefined) {
-			id = this.vars.push(obj) - 1;
-			this.var_map.set(obj, id);
-		}
-		return id;
-	}
-
-	static get_by_id(id) {
-		return Template.tpl_map.get(id);
-	}
-
-	static build(str) {
-		const append_s = '\nout += ';
-		const content = str
-			.replace(/(^\s+|\s+$)/gm, '' /* trim each line (tabs & spaces) */)
-			.replace(/\n/g, '' /* don't break `out` with multi-line strings */)
-			.replace(/"/g, '\\"' /* escape double quotes */)
-			.replace(/{@@(.*?)@@}/g, (match, content) => { /* raw text block */
-				return content
-					.replace(/{/g, "&#123;").replace(/}/g, "&#125;" /* mangle braces so they're not processed below */)
-			})
-			.replace(/{(.*?[^\\])}/g, (match, content) => { /* for each code block */
-				return '";\n' + content
-					.replace(/\\"/g, '"' /* don't escape double quotes -> they're real strings now */)
-					.replace(/\$/g, "local." /* $ variable access */)
-					.replace(/^assign (.*)$/, "local.$1;" /* setup new $ variable */)
-					.replace(/^(?:foreach|for) \s*(.*?)\s*=(.*?);(.*?);(.*?)$/, "{const _bckup_name=\"$1\"; const _bckup=local[_bckup_name]; for (let $1 =$2;$3;$4) { local[_bckup_name] = $1;" /* make the local variable available with $variable syntax, so also backup the previous value of local[var_name] */)
-					.replace(/^(?:foreach|for) (.*) (of|in) (.*)$/, "{const _bckup_name=\"$1\"; const _bckup=local[_bckup_name]; for (const $1 $2 $3) { local[_bckup_name] = $1;")
-					.replace(/^\/(foreach|for)$/g, "}; local[_bckup_name] = _bckup; };" /* restore local[var_name] from before the loop */)
-					.replace(/^if (.*)$/g, ";if ($1) {")
-					.replace(/^else$/g, "} else {")
-					.replace(/^else if (.*)$/g, "} else if ($1) {")
-					.replace(/^\/if$/g, "}")
-					.replace(/^serialize (.*)$/g, (match, content) => {
-						return append_s + '"Template.get_by_id(" + tpl.id + ").vars[" + tpl.get_var_id(' + content + ') + "]"';
-					})
-					.replace(/^hascontent$/g, "{const _bckup = out; let _has_cntnt = false; {")
-					.replace(/^content$/g, "{ const _bckup = out; {")
-					.replace(/^\/content$/g, "} _has_cntnt = _bckup != out; }")
-					.replace(/^\/hascontent$/g, "} if (!_has_cntnt) out = _bckup; }")
-					.replace(/^@(.*)/g, (match, content) => { /* text block */
-						return append_s + '(' + content + ');';
-					})
-					+ append_s + '"';
-			})
-			.replace(/&#123;/g, '{').replace(/&#125;/g, '}' /* un-mangle braces */)
-			.replace(/\\}/g, '}' /* get rid of escaped braces */);
-		;
-		return '\'use strict\';\nlet out = "' + content + '";\nreturn out;';
-	}
-
 	compile() {
 		const tpl_script = document.getElementById(this.name);
 		if (!tpl_script) {
@@ -145,5 +92,58 @@ class Template {
 
 	remove() {
 		Template.tpl_map.delete[this.id];
+	}
+
+	get_var_id(obj) {
+		let id = this.var_map.get(obj);
+		if (id == undefined) {
+			id = this.vars.push(obj) - 1;
+			this.var_map.set(obj, id);
+		}
+		return id;
+	}
+
+	static get_by_id(id) {
+		return Template.tpl_map.get(id);
+	}
+
+	static build(str) {
+		const append_s = '\nout += ';
+		const content = str
+			.replace(/(^\s+|\s+$)/gm, '' /* trim each line (tabs & spaces) */)
+			.replace(/\n/g, '' /* don't break `out` with multi-line strings */)
+			.replace(/"/g, '\\"' /* escape double quotes */)
+			.replace(/{@@(.*?)@@}/g, (match, content) => { /* raw text block */
+				return content
+					.replace(/{/g, "&#123;").replace(/}/g, "&#125;" /* mangle braces so they're not processed below */)
+			})
+			.replace(/{(.*?[^\\])}/g, (match, content) => { /* for each code block */
+				return '";\n' + content
+					.replace(/\\"/g, '"' /* don't escape double quotes -> they're real strings now */)
+					.replace(/\$/g, "local." /* $ variable access */)
+					.replace(/^assign (.*)$/, "local.$1;" /* setup new $ variable */)
+					.replace(/^(?:foreach|for) \s*(.*?)\s*=(.*?);(.*?);(.*?)$/, "{const _bckup_name=\"$1\"; const _bckup=local[_bckup_name]; for (let $1 =$2;$3;$4) { local[_bckup_name] = $1;" /* make the local variable available with $variable syntax, so also backup the previous value of local[var_name] */)
+					.replace(/^(?:foreach|for) (.*) (of|in) (.*)$/, "{const _bckup_name=\"$1\"; const _bckup=local[_bckup_name]; for (const $1 $2 $3) { local[_bckup_name] = $1;")
+					.replace(/^\/(foreach|for)$/g, "}; local[_bckup_name] = _bckup; };" /* restore local[var_name] from before the loop */)
+					.replace(/^if (.*)$/g, ";if ($1) {")
+					.replace(/^else$/g, "} else {")
+					.replace(/^else if (.*)$/g, "} else if ($1) {")
+					.replace(/^\/if$/g, "}")
+					.replace(/^serialize (.*)$/g, (match, content) => {
+						return append_s + '"Template.get_by_id(" + tpl.id + ").vars[" + tpl.get_var_id(' + content + ') + "]"';
+					})
+					.replace(/^hascontent$/g, "{const _bckup = out; let _has_cntnt = false; {")
+					.replace(/^content$/g, "{ const _bckup = out; {")
+					.replace(/^\/content$/g, "} _has_cntnt = _bckup != out; }")
+					.replace(/^\/hascontent$/g, "} if (!_has_cntnt) out = _bckup; }")
+					.replace(/^@(.*)/g, (match, content) => { /* text block */
+						return append_s + '(' + content + ');';
+					})
+					+ append_s + '"';
+			})
+			.replace(/&#123;/g, '{').replace(/&#125;/g, '}' /* un-mangle braces */)
+			.replace(/\\}/g, '}' /* get rid of escaped braces */);
+		;
+		return '\'use strict\';\nlet out = "' + content + '";\nreturn out;';
 	}
 }
