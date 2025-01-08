@@ -14,6 +14,8 @@ class Template {
 		this.var_map = new Map();
 		this.vars = [];
 		this.id = Template.tpl_map_idx++;
+		this.tpl_el = null;
+		this.tpl_code_blocks = null;
 
 		/* weak map keys can't be primitives, so use a dummy object */
 		const id_obj = Template.tpl_id_map[this.id] = {};
@@ -66,7 +68,7 @@ class Template {
 					.replace(/^@(.*)/g, (match, content) => { /* text block */
 						return append_s + '(' + content + ');';
 					})
-				+ append_s + '"';
+					+ append_s + '"';
 			})
 			.replace(/&#123;/g, '{').replace(/&#125;/g, '}' /* un-mangle braces */)
 			.replace(/\\}/g, '}' /* get rid of escaped braces */);
@@ -81,26 +83,29 @@ class Template {
 		}
 		const script_text = tpl_script.text;
 
-		const el = document.createElement('template');
-		el.innerHTML = script_text;
-
-		this.raw_data = el;
+		const code_blocks = [];
+		const tpl_html = script_text
+			.replace(/{(.*?[^\\])}/g, (match, content) => { /* for each code block */
+				/* replace with $JSTx to obtain valid HTML syntax */
+				const idx = code_blocks.push(content);
+				return '$JST' + idx;
+			});
+		const tpl_el = document.createElement('template');
+		tpl_el.innerHTML = tpl_html;
+		this.tpl_el = tpl_el;
+		this.tpl_code_blocks = code_blocks;
 
 		const f_text = Template.build(script_text);
 		this.func = new Function('tpl', 'local', f_text);
 	}
 
-	run_raw(args = {}) {
-		if (!this.func) {
+	run(args = {}) {
+		if (!this.tpl_el) {
 			this.compile();
 		}
 
 		this.args = args;
-		return this.func(this, args);
-	}
-
-	run(args = {}) {
-		const html_str = this.run_raw(args);
+		const html_str = this.func(this, args);
 
 		const el = document.createElement('div');
 		el.jsTemplate = this;
@@ -112,23 +117,25 @@ class Template {
 		return this.data;
 	}
 
-	reload(selector, args = this.args) {
-		const raw = this.raw_data.content.querySelector(selector);
+	reload(selector, new_args = {}) {
+		const raw = this.tpl_el.content.querySelector(selector);
 		const real = this.data.querySelector(selector);
 		if (!raw || !real) {
 			return false;
 		}
 
-		/* fix outerHTML mangling some (technically invalid) syntax */
-		const raw_str = raw.outerHTML
-				.replace(/&amp;/g, '&')
-				.replace(/\{if="" /g, '{if ')
-				.replace(/&lt;/g, '<')
-				.replace(/&gt;/g, '>')
-		;
-		const new_fn_text = Template.build(raw_str);
+		/* expand $JSTx variables into jstemplate syntax */
+		const tpl_str = raw.outerHTML
+			.replace(/\$JST([0-9]+)/g, (match, content) => {
+				const idx = parseInt(content);
+				return '{' + this.tpl_code_blocks[idx - 1] + '}';
+			})
+		const new_fn_text = Template.build(tpl_str);
 		const new_fn = new Function('tpl', 'local', new_fn_text);
 
+		const args = {};
+		Object.assign(args, this.args);
+		Object.assign(args, new_args);
 		const new_real = document.createElement('template');
 		new_real.innerHTML = new_fn(this, args);
 
