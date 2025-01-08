@@ -1,12 +1,13 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-	<title>Test</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta charset="UTF-8">
+	<title>Demo 1</title>
 	<script src="template.js"></script>
 </head>
 <body>
-	<h1>Test 1</h1>
+	<h1>Demo 1</h1>
 	<script id="tpl-test" type="text/x-jstemplate">
 		<div id="main">
 			<div>Val inside #main: "{@$some_var}"</div>
@@ -35,40 +36,13 @@
 		@@}
 	</script>
 	<script type="text/javascript">
-		let last_src = {};
-		let g_tpl = null;
 		window.onload = () => {
-			try {
-				const tpl = g_tpl = new Template('tpl-test');
-				const f = tpl.compile();
-				const el = tpl.run({ some_var: 'initial' });
-				document.body.append(...el);
-				tpl.reload('#to-reload', { some_var: 'reloaded' });
-				tpl.reload('#main');
-			} finally {
-				const is_changed = async (filename) => {
-					const req = await fetch(filename)
-					const src = await req.text();
-					const ret = last_src[filename] && last_src[filename] != src;
-					last_src[filename] = src;
-					return ret;
-				};
-
-				const files = [ 'template.js', 'demo.html' ];
-
-				const check_reload = async () => {
-					for (const f of files) {
-						if (!await is_changed(f)) {
-							continue;
-						}
-
-						window.location.reload();
-						return;
-					}
-					setTimeout(check_reload, 1000);
-				};
-				check_reload();
-			}
+			const tpl = g_tpl = new Template('tpl-test');
+			const f = tpl.compile();
+			const el = tpl.run({ some_var: 'initial' });
+			document.body.append(...el);
+			tpl.reload('#to-reload', { some_var: 'reloaded' });
+			tpl.reload('#main');
 		};
 	</script>
 </body>
