@@ -1,0 +1,10 @@
+{
+  "name": "@darsto/jstemplate",
+  "version": "2.0.0",
+  "type": "module",
+  "license": "MIT",
+  "main": "template.mjs",
+  "scripts": {
+    "prepare": "sed 's/class Template/export default class Template/' template.js > template.mjs"
+  }
+}

@@ -15,18 +15,14 @@
 		window.onload = async () => {
 			/* Note that i.e. Chrome needs to be run with --allow-file-access-from-files
 			 * for this to work when .html is accessed locally (file://...) */
-			let tpl_f = await fetch('demo2.tpl');
-			let tpl_text = await tpl_f.text();
-
-			const script_el = document.createElement('script');
-			script_el.type = 'text/x-jstemplate';
-			script_el.innerHTML = tpl_text;
-			script_el.id = 'tpl-test';
-			document.head.append(script_el);
+			const tpl_f = await fetch('demo2.tpl');
+			const tpl_text = await tpl_f.text();
+			Template.tpl_finder = (_name) => {
+				return tpl_text;
+			};
 
 			const my_tpl_args = { some_var: 'initial' };
-
-			const tpl = g_tpl = new Template('tpl-test');
+			const tpl = g_tpl = new Template('demo2');
 			const f = tpl.compile();
 			const el = tpl.run(my_tpl_args);
 			document.body.append(el);

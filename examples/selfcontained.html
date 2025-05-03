@@ -9,40 +9,44 @@
 <body>
 	<h1>Demo 1</h1>
 	<script id="tpl-test" type="text/x-jstemplate">
+		{* comment *}
 		<div id="main">
-			<div>Val inside #main: "{@$some_var}"</div>
+			<div>Val inside #main: "${$some_var}"</div>
 			{for i = 0; i < 3; i++}
-				{assign obj = { name: 'test ' + $i \}}
+				{assign obj = { name: 'test ' + $i }}
 				{hascontent}
 					<div onclick="console.log('pressed ' + {serialize $obj.name})">
-						<span>{@$i} + 1 = </span>
+						<span>${$i} + 1 = </span>
 						{content}
 							{if $i != 1 && true == true}
-								<span class="{if $i == 2}test{/if}">{@$i + 1}</span>
+								<span class="{if $i == 2}test{/if}">${$i + 1}</span>
 							{/if}
 						{/content}
 					</div>
 				{/hascontent}
 			{/for}
 		</div>
-		<div id="to-reload">Val inside #to-reload: "{@$some_var}"</div>
+		<div id="to-reload">Val inside #to-reload: "${$some_var}"</div>
 
-		{@@
+		{literal}
 		<style>
 			.test {
 				font-weight: bold;
 			}
 		</style>
-		@@}
+		{/literal}
 	</script>
 	<script type="text/javascript">
 		window.onload = () => {
+			Template.tpl_finder = (name) => {
+				return document.querySelector(`#${name}`)?.textContent;
+			};
 			const tpl = g_tpl = new Template('tpl-test');
 			const f = tpl.compile();
 			const el = tpl.run({ some_var: 'initial' });
 			document.body.append(el);
-			tpl.reload('#to-reload', { some_var: 'reloaded' });
-			tpl.reload('#main');
+			tpl.reload('#main', { some_var: 'reloaded' });
+			tpl.reload('#to-reload', { some_var: 'reloaded-selectively' });
 		};
 	</script>
 </body>

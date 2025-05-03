@@ -1,0 +1,18 @@
+{
+  "name": "@darsto/jstemplate",
+  "version": "2.0.3",
+  "license": "MIT",
+  "exports": "./template.mjs",
+  "compilerOptions": {
+    "lib": ["deno.ns", "dom"]
+  },
+  "publish": {
+    "include": [
+      "./template.mjs",
+      "./template.d.ts",
+      "README.md",
+      "LICENSE",
+      "deno.json"
+    ]
+  }
+}
